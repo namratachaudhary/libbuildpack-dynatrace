@@ -16,7 +16,7 @@ jobs:
             - "/go/pkg/mod"
       - run:
           name: Run tests
-          command: go test all -v -coverprofile=coverage.out
+          command: go test -v -coverprofile=coverage.out
       - run:
           name: Install godacov
           command: go get github.com/schrej/godacov
