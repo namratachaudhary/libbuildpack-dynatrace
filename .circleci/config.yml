@@ -1,0 +1,40 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "ON"
+    working_directory: /go/src/github.com/namratachaudhary/libbuildpack-dynatrace
+    steps:
+      - checkout
+      - restore_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run:
+          name: Run tests
+          command: go test all -v -coverprofile=coverage.out
+      - run:
+          name: Install godacov
+          command: go get github.com/schrej/godacov
+      - run:
+          name: codacy upload
+          command: godacov -t $CODACY_TOKEN -r ./coverage.out -c $CIRCLE_SHA1
+      - run: 
+          name: Install goveralls
+          command: go get github.com/mattn/goveralls
+      - run:
+          name: Upload to coveralls
+          command: goveralls -coverprofile=coverage.out -service circleci.com -repotoken $COVERALLS_TOKEN
+
+workflows:
+  version: 2
+  build-release:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
